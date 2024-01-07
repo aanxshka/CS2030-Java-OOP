@@ -1,0 +1,82 @@
+//removed EditRecurTask as it was redundant and I managed to find a way to make the code work without it.
+
+class RecurringTask extends Task {
+
+    private final ImList<TaskParent> tasklist;    
+    private final int freq;
+    private final int numOfOcc;
+
+    RecurringTask(Task task, int freq, int numOfOcc) {
+        super(task);
+        this.freq = freq;
+        this.numOfOcc = numOfOcc;
+        ImList<TaskParent> tasks = new ImList<TaskParent>();
+        for (int i = 0; i < this.numOfOcc; i++) {
+            tasks = tasks.add(new Task(task.getDay() + (this.freq * i), task.getStart()
+                        , task.getEnd(), task.getDesc()));
+        }
+        this.tasklist = tasks;
+    }
+
+
+    RecurringTask(RecurringTask task, ImList<TaskParent> tasklist) {
+        super(task);
+        this.freq = task.freq;
+        this.numOfOcc = task.numOfOcc;
+        this.tasklist = tasklist;
+    }
+
+
+    @Override
+    ImList<TaskParent> getTask(int day) {
+        for (TaskParent task : this.tasklist) {
+            if (task.getDay() == day && !task.getTask().isEmpty()) {
+                return new ImList<TaskParent>().add(task);
+            }
+        }
+        return new ImList<TaskParent>();
+    }
+
+
+    RecurringTask edit(int startT, int endT) {
+        return new RecurringTask(super.edit(startT, endT), this.freq, this.numOfOcc); 
+    }
+
+
+    RecurringTask edit(int occ, int day, int startT, int endT) {
+        TaskParent oldTask = this.tasklist.get(occ - 1);
+        TaskParent newTask = new Task(day, startT, endT, oldTask.getDesc());
+        ImList<TaskParent> finalList = this.tasklist;
+        finalList = finalList.set(occ - 1, newTask);
+        finalList = finalList.sort(new RecurringTaskComparator());
+
+        return new RecurringTask(this, finalList);
+    }
+
+
+    CancelledRecurringTask cancel() {
+        return new CancelledRecurringTask(this);
+
+    }
+    
+
+    RecurringTask cancel(int occ) {
+        TaskParent oldTask = this.tasklist.get(occ - 1);
+        TaskParent newTask = new CancelledTask(oldTask);
+        ImList<TaskParent> finalList = this.tasklist.set(occ - 1, newTask);
+        return new RecurringTask(this, finalList);
+        
+    }
+
+
+    @Override 
+    public String toString() {
+        String str = "Recurring " + super.toString();
+    
+        for (int i = 0; i < tasklist.size(); i++) {
+            str = str + String.format("\n#%d:%s",i + 1, tasklist.get(i).toString());
+        }
+        return str;
+    }
+}
+

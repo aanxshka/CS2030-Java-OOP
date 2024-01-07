@@ -1,0 +1,39 @@
+class EditedRecurTask extends RecurringTask {
+
+    private final int freq;
+    private final int numOfOcc;
+    private final ImList<TaskParent> tasklist;
+
+    EditedRecurTask(RecurringTask task, ImList<TaskParent> tasklist) {
+        super(task);
+        this.freq = task.getfreq();
+        this.numOfOcc = task.getnumOfOcc();
+        this.tasklist = task.gettasklist();
+
+    }
+
+
+    @Override 
+    EditedRecurTask edit(int occ, int day, int startT, int endT) { 
+        TaskParent oldTask = this.tasklist.get(occ);
+        TaskParent newTask = new Task(day, startT, endT, oldTask.getDesc());
+        ImList<TaskParent> orderedList = this.tasklist.set(occ,newTask);
+        orderedList = orderedList.sort(new RecurringTaskComparator());
+        return new EditedRecurTask(this, orderedList);
+    }
+
+/*
+
+    @Override 
+    public String toString() {
+        String str = "Recurring " + super.toString();
+        ImList<TaskParent> finaltasks = this.tasklist.sort(new RecurringTaskComparator());
+ 
+        for (int i = 0; i < finaltasks.size(); i++) {
+            str = str + "\n" +  "#" + (i+1) + finaltasks.get(i).toString();
+        }
+        return str;
+   
+    }
+*/
+}

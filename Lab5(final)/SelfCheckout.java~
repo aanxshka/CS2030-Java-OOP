@@ -1,0 +1,81 @@
+import java.util.function.Supplier;
+
+class SelfCheckout extends Server {
+    private final ImList<Server> counters;
+    private final int chosen;
+    private static final double min = 10000000;
+
+    SelfCheckout(double time, int id, int qmax, ImList<Customer> customers, 
+        Supplier<Double> restTimes, 
+        ImList<Server> counters, int chosen) {
+        super(time, id, qmax, customers, restTimes);
+        this.counters = counters;
+        this.chosen = chosen;
+    }
+
+    double getMin() {
+        double t = min;
+        for (int i = 0; i < this.counters.size(); i++) {
+            if (counters.get(i).getTime() < t) {
+                t = counters.get(i).getTime();
+            }
+        }
+        return t;
+    }
+
+    int getMinPos() {
+        for (int i = 0; i < this.counters.size(); i++) {
+            if (counters.get(i).getTime() == this.getMin()) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    int getPrev() {
+        return this.chosen;
+    }
+
+
+    @Override 
+    ImList<Server> getCounters() {
+        return this.counters;
+    }
+
+
+    @Override 
+    SelfCheckout serve(Customer c, int scpos, int qn) {
+        //System.out.println(this.getCounter(c));
+        int s = scpos;
+        Server oldser = this.counters.get(s);
+        Server newser = oldser.serve(c,s,qn); 
+        
+        ImList<Server> updated = this.counters.set(s, newser);
+        ImList<Customer> custs = super.getCustomers().remove(0);    
+
+        return new SelfCheckout(newser.getTime(), super.getID(), 
+                super.getqmax(), custs, super.getrestTimes(),
+                updated, newser.getID());
+    }
+
+
+    @Override
+    SelfCheckout queue(Customer c) {
+        ImList<Customer> customers = super.getCustomers().add(c);
+        return new SelfCheckout(this.getTime(), super.getID(), super.getqmax(), 
+                customers, super.getrestTimes(), this.counters, this.chosen);
+    }
+
+
+    @Override 
+    int getCounter(double t) {
+        for (int i = 0; i < this.counters.size(); i++) {
+            if (this.counters.get(i).getTime() <= t) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+}
+

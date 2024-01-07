@@ -1,0 +1,106 @@
+import java.util.function.Supplier;
+
+class Arrival implements Event {
+
+    private final Customer c;
+    private final int num;
+   
+    Arrival(Customer c, int num) {
+        this.c = c;
+        this.num = num;
+ 
+    }
+  
+    public double getWaitTime() {
+        return 0.0;
+    }
+
+
+
+    public int getServed() {
+        return 0;
+    }
+
+    public int getNotServed() {
+        return 0;
+    }
+
+
+    public double getTime() {
+        return this.c.getAT();
+    }
+
+
+    public Customer getCustomer() {
+        return this.c;
+    }
+
+
+    public Pair<Event, ImList<Server>> nextEvent(ImList<Server> servers) {
+        int s = this.checkServer(servers);
+        int q = this.checkQueue(servers);
+        if (s > -1) {
+            int id = servers.get(s).getID();
+            String str = servers.get(s).stringid();
+            int scpos = -1;
+            if (this.num != 0 && id == servers.size()) {
+                Server sc = servers.get(s);
+                int counter = sc.getCounter(this.c.getAT()) + servers.size();
+                str = String.format("self-check %d", counter);
+                scpos = sc.getCounter(this.c.getAT());
+            }
+            return new Pair<Event, ImList<Server>>(new Serve(this.c,
+                        this.getTime(), id, str, scpos, 0), servers); 
+
+        } else if (q > -1) {
+            int id = servers.get(q).getID();
+            String str = servers.get(q).stringid();
+            if (this.num != 0 && id == servers.size()) {
+                str = String.format("self-check %d", id);
+            }
+            return new Pair<Event, ImList<Server>>(new Wait(this.c,
+                        this.getTime(), id, str, this.num), servers);
+        }
+        return new Pair<Event, ImList<Server>>(new Leave(this.c,
+                    this.getTime()), servers);
+    }
+
+
+    int checkServer(ImList<Server> servers) {
+        if (this.num > 0) {
+            for (int i = 0; i < servers.size() - 1; i++) {
+                if (this.c.getAT() >= servers.get(i).getTime()) {
+                    return i;
+                }
+            }
+            Server sc = servers.get(servers.size() - 1);
+            int counter = sc.getCounter(this.c.getAT());
+            if (counter != -1) {
+                return servers.size() - 1;
+            }
+        }
+        for (int i = 0; i < servers.size(); i++) {
+            if (this.c.getAT() >= servers.get(i).getTime()) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    
+
+    int checkQueue(ImList<Server> servers) {
+        for (int i = 0; i < servers.size(); i++) {
+            if (servers.get(i).getCustomers().size() < servers.get(i).getqmax()) {
+                return i;
+            }
+        }
+        return -1;
+    }
+        
+
+    @Override 
+    public String toString() {
+        return String.format("%.3f", this.c.getAT()) + " " + this.c.getID() + " arrives";
+    }
+
+}

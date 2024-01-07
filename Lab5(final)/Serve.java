@@ -1,0 +1,64 @@
+class Serve implements Event {
+
+    private final Customer c;
+    private final int id;
+    private final double time;
+    private final String str;
+    private final int scpos;
+    private final int qn;
+    
+    Serve(Customer c, double time, int id, String str, int scpos, int qn) {
+        this.c = c;
+        this.time = time;
+        this.id = id;
+        this.str = str;
+        this.scpos = scpos;
+        this.qn = qn;
+    }
+
+    public double getWaitTime() {
+        return this.time - this.c.getAT();
+    }
+
+
+    public int getServed() {
+        return 1;
+    }
+
+    public int getNotServed() {
+        return 0;
+    }
+    
+    public double getTime() {
+        return this.time;
+    }
+
+
+    public Customer getCustomer() {
+        return this.c;
+    }
+
+    public Pair<Event,ImList<Server>> nextEvent(ImList<Server> servers) {
+        int index = this.id - 1;
+        Server ser = servers.get(index);
+        Server newser = ser.serve(this.c, this.scpos, this.qn);
+        servers = servers.set(index, newser);
+        
+        if (this.scpos != -1) {
+            newser  = servers.get(index).getCounters().get(scpos);
+        }
+
+        double donetime = newser.getTime();
+        Event next = new Done(this.c, donetime, this.id, this.str);
+        return new Pair<>(next, servers);
+
+    }
+
+
+    @Override
+    public String toString() {
+        return String.format("%.3f", this.getTime()) + " " + this.c.getID() 
+            + " serves by " + this.str;
+    }
+
+}  

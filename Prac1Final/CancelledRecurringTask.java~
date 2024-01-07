@@ -1,0 +1,12 @@
+class CancelledRecurringTask extends CancelledRecurringTask {
+
+    CancelledRecurringTask(TaskParent task) {
+        super(task);
+    }
+
+
+    @Override 
+    public String toString() {
+        return "Recurring " + super.toString();
+    }
+}
